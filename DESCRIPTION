@@ -1,0 +1,9 @@
+Package: linearregression
+Type: Package
+Title: Calculates linear regression
+Version: 1.0
+Date: 2020-09-14
+Author: Nicolas Taba, Tim Yuki Washio
+Maintainer: Tim Yuki Washio <timwa902@student.liu.se>, Nicolas Taba <nicta839@student.liu.se>
+Description: Computes linear regression using ordinary least squares, implementing object oriented programming in RC/S3.
+License: GPL-3

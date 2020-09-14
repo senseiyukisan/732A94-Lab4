@@ -1,3 +1,9 @@
+# .DS_Store
+.DS_Store
+
+# Rproj
+*.Rproj
+
 # History files
 .Rhistory
 .Rapp.history
