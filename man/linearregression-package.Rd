@@ -1,3 +1,4 @@
+\name{linearregression-package}
 \alias{linearregression-package}
 \alias{linearregression}
 \docType{package}
