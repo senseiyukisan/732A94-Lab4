@@ -6,6 +6,11 @@
 \usage{
 linreg(formula, data)
 }
+\arguments{
+\item{formula}{formula}
+
+\item{data}{data}
+}
 \value{
 Instance of linreg1 class
 }

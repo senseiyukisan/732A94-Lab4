@@ -1,6 +1,6 @@
 #' @title Linear Regression
-#' @param formula
-#' @param data
+#' @param formula formula
+#' @param data data
 #' @description 
 #' Implementation of a linear regression model to calculate the relationship between a dependent variable
 #' and N independent variables.
