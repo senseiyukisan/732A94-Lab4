@@ -1,3 +1,12 @@
+#' @title Linear Regression
+#' @param formula
+#' @param data
+#' @description 
+#' Implementation of a linear regression model to calculate the relationship between a dependent variable
+#' and N independent variables.
+#' @return Instance of linreg1 class
+#' @references \url{https://en.wikipedia.org/wiki/Linear_regression}
+#' @export
 linreg = function(formula, data) {
   X <- model.matrix(formula, data) #What is this doing exactly?
   y <- as.matrix(data[all.vars(formula)[1]]) #this gives the right answer but I don't know why
@@ -47,7 +56,16 @@ linreg = function(formula, data) {
 }
 
 
-# Create object with fields and methods
+#' @title Linear Regression class
+#' @description Linear Regression class containing information about relevant results from the linear regression method.
+#' @field regressions_coefficients vector
+#' @field fitted_values matrix
+#' @field residuals matrix
+#' @field degrees_freedom numeric
+#' @field residual_variance numeric
+#' @field variance_regression_coefficients matrix
+#' @field t_values vector
+#' @export
 linreg1 <- setRefClass("linreg1",
                        fields = list(formula = "formula",
                                      data = "data.frame",
@@ -65,7 +83,6 @@ linreg1 <- setRefClass("linreg1",
                          #   },
                          resid <- function(){
                            return(.self$residuals)
-                         }
                          },
                          pred <- function(){
                            return(.self$fitted_values)
