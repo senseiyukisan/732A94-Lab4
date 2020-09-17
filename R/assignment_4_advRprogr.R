@@ -7,7 +7,12 @@
 #' @return Instance of linreg1 class
 #' @references \url{https://en.wikipedia.org/wiki/Linear_regression}
 #' @export
-linreg = function(formula, data) {
+
+
+library(ggplot2)
+
+
+linreg_init = function(formula, data) {
   X <- model.matrix(formula, data) 
   y <- as.matrix(data[all.vars(formula)[1]]) 
 
@@ -40,14 +45,10 @@ linreg = function(formula, data) {
   # t <- Beta %*% (1/sqrt(abs(var_beta))) #wrong size of table, brute force with a for loop
   t <- rep(0, length(Beta))
   for (i in 1:length(Beta)){
-    for (j in 1:length(Beta)){
-      t[i] <- t[i] + Beta[i]/sqrt(abs(var_beta[i,j]))
-      j <- j+1
-    }
-    i <- i + 1
+      t[i] <- Beta/sqrt(abs(var_beta[i,i]))
   }
     
-  #Return #I think the Class needs to be created before the function is
+  #Return
   return(linreg(formula <- formula,
                 data <- data,
                 regression_coefficients <- Beta,
@@ -72,40 +73,45 @@ linreg <- setRefClass("linreg",
                                      variance_regression_coefficients = "matrix",
                                      t_values = "vector"),
                        methods = list(
-                         
+                         #print method
                          print = function(){
-                           cat(paste0("Formula: ", .self$formula, "data: ", .self$data, "\n"))
-                           cat("Coefficients: \n")
+                           cat(paste0("Formula: ", .self$formula, ", data: ", .self$data, "\n\n"))
+                           cat("Coefficients: \n\n")
                            print(.self$regression_coefficients)
                          },
+                         #plot method
                          plot <- function(){
                            
-                          standardized_residuals <- sqrt(abs(.self$residuals - mean(.self$residuals))) 
+                          standardized_residuals <- sqrt(abs(.self$residuals - median(.self$residuals))) 
                            
-                           library(ggplot2)
                            p1 <- ggplot() + 
                                 geom_point(mapping=aes(x = .self$fitted_values, y = .self$residuals)) +
-                                geom_path(aes(x = .self$fitted_values, y = .self$residuals), color = red)
-                                xlab(cat(paste0("Fitted Values \n", as.character(.self$formula))))
-                                ylab("Residuals")
+                                geom_path(aes(x = .self$fitted_values, y = .self$residuals), formula = y~x, color = red) +
+                                xlab(cat(paste0("Fitted Values \n", as.character(.self$formula)))) +
+                                ylab("Residuals") +
                                 ggtitle("Residuals vs Fitted")
                                 
                            p2 <- ggplot()+
-                                geom_point(mapping=aes(x = .self$fitted_values, y = standardized_residuals))
-                                geom_path(aes(x = .self$fitted_values, y = standardized_residuals), color = red)
-                                xlab(cat(paste0("Fitted Values \n", as.character(.self$formula)))
-                                ylab(expression(sqrt("Standardized Residuals")))
+                                geom_point(mapping=aes(x = .self$fitted_values, y = standardized_residuals)) +
+                                geom_smooth(aes(x = .self$fitted_values, y = standardized_residuals), formula = y~x, color = red) +
+                                xlab(cat(paste0("Fitted Values \n", as.character(.self$formula))) +
+                                ylab(expression(sqrt("Standardized Residuals"))) +
                                 ggtitle("Scale-Location")
                                 
-                                
-                                grid.arrange(p1, p2, nrow = 2) #Not sure about this one. It requires the gridExtra package.Uncertain how dependencies work
+                           # p_out <- c(p1 + p2) #unexpected symbol
+                           plot(p1 + p2) #unexpected symbol? Is this still a ggplot argument?
+                         # grid.arrange(p1, p2, nrow = 2) #Not sure about this one. It requires the gridExtra package.Uncertain how dependencies work
+        
                          },
+                         #residuals method
                          resid <- function(){
                            return(.self$residuals)
                          },
+                         #predicted values method
                          pred <- function(){
                           return(.self$fitted_values)
                          },
+                         #regression coefficients method
                          coef <- function(){
                            Beta_named <- .self$regression_coefficients
                            for(i in 1:length(Beta_named)){
@@ -113,16 +119,26 @@ linreg <- setRefClass("linreg",
                            }
                            return(Beta_named)
                          },
+                         #summary method
                          summary <- function(){
                            cat("Call: \n")
-                           cat(paste0("linreg(formula =", as.character(.self$formula), ", data = ", as.character(.self$data),"\n"))
+                           cat(paste0("linreg(formula = ", as.character(.self$formula), ", data = ", as.character(.self$data),"\n"))
                            cat("Coefficients: \n")
                            # code a table here that is similar to summary(lm(Petal.Length~Species, data = iris))
-                           # only coefficients (Beta), sqrt(variance_regression_coefficients), t value and p value
-                           #rownames(table) <- rownames(var_beta)
-                           #colnames(table) <- c("Estimate", "Std. Error", "t value", "p value")
+                           # p_value <- 2*pt(-abs(.self$t_values))
+                           #only coefficients (Beta), sqrt(variance_regression_coefficients), t value and p value
+                           #need to round values otherwise we might return machine precision ~= 0
+                           #not sure if this work
+                           # table <- matrix(c(round(.self$regression_coefficients, 3)), 
+                           #                   round(.self$variance_regression_coefficients, 3),
+                           #                   round(.self$t_value, 3),
+                           #                   round(p_value, 3)),
+                           #                   nrow = length(.self$regression_coefficients), ncol = 4)
+                           # rownames(table) <- rownames(.self$regression_coefficients)
+                           # colnames(table) <- c("Estimate", "Std. Error", "t value", "p value")
+                           # write.table(table)
                            
-                           cat(paste0("Residual standard error: ", as.character(sqrt(.self$residual_variance)), " on", .self$degrees_freedom, " degrees of freedom"))
+                           cat(paste0("\n Residual standard error: ", as.character(sqrt(.self$residual_variance)), " on", .self$degrees_freedom, " degrees of freedom"))
                          }
                        )
 )
