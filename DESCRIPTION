@@ -1,6 +1,6 @@
-Package: linearregression
-Type: Package
+Package: lab4linreg
 Title: Calculates linear regression
+Type: Package
 Version: 1.0
 Date: 2020-09-14
 Author: Nicolas Taba, Tim Yuki Washio
@@ -9,3 +9,4 @@ Description: Computes linear regression using ordinary least squares, implementi
 License: GPL-3
 LazyLoading: true
 RoxygenNote: 7.1.1
+Imports: ggplot2
