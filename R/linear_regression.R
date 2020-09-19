@@ -1,5 +1,5 @@
-#' @title Linear Regression Class
-#' @description Linear Regression class containing information about relevant results from the linear regression method.
+#' @title LinearRegression Class
+#' @description LinearRegression class containing information about relevant results from the linear regression method.
 #' @field formula A formula
 #' @field data A data.frame
 #' @field regressions_coefficients A vector
@@ -13,7 +13,7 @@
 LinearRegression = setRefClass("LinearRegression",
   fields = list(
     formula = "formula",
-    data = "data.frame",
+    data = "character",
     regression_coefficients = "matrix",
     fitted_values = "matrix",
     residuals = "matrix",
@@ -25,8 +25,8 @@ LinearRegression = setRefClass("LinearRegression",
   methods = list(
     print = function(){
       "Prints input parameters and regression coefficients."
-      cat(paste0("Formula: ", .$self.formula, "data: ", .$self.data, "\n"))
-      cat(paste0("Coefficients: \n", .$self.regression_coefficients))
+      cat("Call:\nlinreg(formula = ", format(formula), ", data = ", data, ")\n", sep = "")
+      cat("Coefficients:\n", rownames(regression_coefficients), "\n", as.vector(regression_coefficients))
     }
     # plot <- function(){
     #   library(ggplot2)
@@ -37,7 +37,7 @@ LinearRegression = setRefClass("LinearRegression",
     #     xlab(cat(paste0("Fitted Values \n", as.character(.self$formula)))) +
     #     ylab("Residuals") +
     #     ggtitle("Residuals vs Fitted")
-    #   
+    # 
     #   p2 <- ggplot() +
     #     geom_point(mapping=aes(x = .self$fitted_values, y = standardized_residuals)) +
     #     geom_smooth(aes(x = .self$fitted_values, y = standardized_residuals), formula = y~x, color = red) +
@@ -75,7 +75,7 @@ LinearRegression = setRefClass("LinearRegression",
     #   #only coefficients (Beta), sqrt(variance_regression_coefficients), t value and p value
     #   #need to round values otherwise we might return machine precision ~= 0
     #   #not sure if this work
-    #   # table <- matrix(c(round(.self$regression_coefficients, 3)), 
+    #   # table <- matrix(c(round(.self$regression_coefficients, 3)),
     #   #                   round(.self$variance_regression_coefficients, 3),
     #   #                   round(.self$t_value, 3),
     #   #                   round(p_value, 3)),
@@ -83,7 +83,7 @@ LinearRegression = setRefClass("LinearRegression",
     #   # rownames(table) <- rownames(.self$regression_coefficients)
     #   # colnames(table) <- c("Estimate", "Std. Error", "t value", "p value")
     #   # write.table(table)
-    #   
+    # 
     #   cat(paste0("\n Residual standard error: ", as.character(sqrt(.self$residual_variance)), " on", .self$degrees_freedom, " degrees of freedom"))
     # }
   )
@@ -121,12 +121,8 @@ linreg = function(formula, data) {
   #Residual variance
   sigma2 <- (t(e)%*%e)/df
   
-  # #variance of regression coefficients
+  #variance of regression coefficients
   var_beta <- solve(t(X) %*% X) * sigma2[1]
-  # print(sigma2)
-  # print(class <- class(Beta))
-  # print(attributes <- attributes(Beta))
-  # print(type_of <- typeof(Beta))
   
   #t-values for each coefficient
   # t <- Beta %*% (1/sqrt(abs(var_beta))) #wrong size of table, brute force with a for loop
@@ -134,28 +130,19 @@ linreg = function(formula, data) {
   for (i in 1:length(Beta)){
     t[i] <- Beta/sqrt(abs(var_beta[i,i]))
   }
-  
-  print(paste("formula: ", formula))
-  print(paste("data: ", data))
-  print(paste("Beta: ", Beta))
-  print(paste("fit_val: ", fit_val))
-  print(paste("e: ", e))
-  print(paste("df: ", df))
-  print(paste("sigma2: ", sigma2))
-  print(paste("var_beta: ", var_beta))
-  print(paste("t: ", t))
-  result_linreg_obj = LinearRegression(
-    formula <- formula,
-    data <- data,
-    regression_coefficients <- Beta,
-    fitted_values <- fit_val,
-    residuals <- e,
-    degrees_freedom <- df,
-    residual_variance <- sigma2,
-    variance_regression_coefficicents <- var_beta,
-    t_values <- t
+
+  linreg_obj <- LinearRegression(
+    formula=formula,
+    data=deparse(substitute(data)),
+    regression_coefficients=Beta,
+    fitted_values=fit_val,
+    residuals=e,
+    degrees_freedom=df,
+    residual_variance=sigma2,
+    variance_regression_coefficients=var_beta,
+    t_values=t
   )
-  # print (result_linreg_obj)
-  return(result_linreg_obj)
+  return(linreg_obj)
 }
+
 

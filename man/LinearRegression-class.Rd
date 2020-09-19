@@ -4,9 +4,9 @@
 \name{LinearRegression-class}
 \alias{LinearRegression-class}
 \alias{LinearRegression}
-\title{Linear Regression Class}
+\title{LinearRegression Class}
 \description{
-Linear Regression class containing information about relevant results from the linear regression method.
+LinearRegression class containing information about relevant results from the linear regression method.
 }
 \section{Fields}{
 
