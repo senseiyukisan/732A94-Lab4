@@ -1,4 +1,4 @@
-#' @title LinearRegression Class
+#' @title LinearRegression class
 #' @description LinearRegression class containing information about relevant results from the linear regression method.
 #' @field formula A formula
 #' @field data A data.frame
@@ -20,51 +20,61 @@ LinearRegression = setRefClass("LinearRegression",
     degrees_freedom = "numeric",
     residual_variance = "matrix",
     variance_regression_coefficients = "matrix",
-    t_values = "vector"
+    t_values = "matrix"
   ),
   methods = list(
     print = function(){
       "Prints input parameters and regression coefficients."
       cat("Call:\nlinreg(formula = ", format(formula), ", data = ", data, ")\n", sep = "")
-      cat("Coefficients:\n", rownames(regression_coefficients), "\n", as.vector(regression_coefficients))
+      
+      v_reg_coef.values = as.vector(regression_coefficients)
+      names(v_reg_coef.values) = rownames(regression_coefficients)
+      cat("Coefficients:\n")
+      print_linreg(v_reg_coef.values)
+    },
+    plot = function(){
+      library(ggplot2)
+      standardized_residuals = sqrt(abs(residuals - median(residuals)))
+      p1 = 
+        ggplot(
+          data.frame(residuals, fitted_values),
+          aes(x=fitted_values, y=residuals)
+        ) + 
+        geom_point() +
+        geom_smooth(method=lm, col="red", se=FALSE) +
+        xlab(paste("Fitted Values \n", "linreg(", format(formula), ")")) +
+        ylab("Residuals") +
+        ggtitle("Residuals vs Fitted")
+
+      print_linreg(p1)
+      p2 = 
+        ggplot(
+          data.frame(standardized_residuals, fitted_values),
+          aes(x=fitted_values, y=standardized_residuals)
+        ) +
+        geom_point() +
+        geom_smooth(method=lm, col="red", se=FALSE) +
+        xlab(paste("Fitted Values \n", format(formula))) +
+        ylab(expression(sqrt("Standardized Residuals"))) +
+        ggtitle("Scale-Location")
+      print_linreg(p2)
+    },
+    resid = function(){
+      "Returns the residuals."
+      return(residuals)
+    },
+    #predicted values method
+    pred = function(){
+      "Returns the fitted values."
+      return(fitted_values)
+    },
+    #regression coefficients method
+    coef = function(){
+      "Returns the regression coefficients as a named vector."
+      v_reg_coef.values = as.vector(regression_coefficients)
+      names(v_reg_coef.values) = rownames(regression_coefficients)
+      return(v_reg_coef.values)
     }
-    # plot <- function(){
-    #   library(ggplot2)
-    #   standardized_residuals <- sqrt(abs(.self$residuals - median(.self$residuals)))
-    #   p1 <- ggplot() +
-    #     geom_point(mapping=aes(x = .self$fitted_values, y = .self$residuals)) +
-    #     geom_path(aes(x = .self$fitted_values, y = .self$residuals), formula = y~x, color = red) +
-    #     xlab(cat(paste0("Fitted Values \n", as.character(.self$formula)))) +
-    #     ylab("Residuals") +
-    #     ggtitle("Residuals vs Fitted")
-    # 
-    #   p2 <- ggplot() +
-    #     geom_point(mapping=aes(x = .self$fitted_values, y = standardized_residuals)) +
-    #     geom_smooth(aes(x = .self$fitted_values, y = standardized_residuals), formula = y~x, color = red) +
-    #     xlab(cat(paste0("Fitted Values \n", as.character(.self$formula)))) +
-    #     ylab(expression(sqrt("Standardized Residuals"))) +
-    #     ggtitle("Scale-Location")
-    #   # p_out <- c(p1 + p2) #unexpected symbol
-    #   plot(p1 + p2) #unexpected symbol? Is this still a ggplot argument?
-    #   # grid.arrange(p1, p2, nrow = 2) #Not sure about this one. It requires the gridExtra package.Uncertain how dependencies work
-    # },
-    # resid <- function(){
-    #   "Returns the residuals."
-    #   return(residuals)
-    # },
-    # #predicted values method
-    # pred <- function(){
-    #   "Returns the fitted values."
-    #   return(.self$fitted_values)
-    # },
-    # #regression coefficients method
-    # coef <- function(){
-    #   Beta_named <- .self$regression_coefficients
-    #   for(i in 1:length(Beta_named)){
-    #     names(Beta_named)[i] <- cat("Coefficient ", as.character(i))
-    #   }
-    #   return(Beta_named)
-    # },
     # #summary method
     # summary <- function(){
     #   cat("Call: \n")
@@ -126,10 +136,12 @@ linreg = function(formula, data) {
   
   #t-values for each coefficient
   # t <- Beta %*% (1/sqrt(abs(var_beta))) #wrong size of table, brute force with a for loop
-  t <- rep(0, length(Beta))
-  for (i in 1:length(Beta)){
-    t[i] <- Beta/sqrt(abs(var_beta[i,i]))
-  }
+  # t <- rep(0, length(Beta))
+  # for (i in 1:length(Beta)){
+  #   t[i] <- Beta/sqrt(abs(var_beta[i,i]))
+  # }
+  
+  t <- var_beta/as.double(sqrt(sigma2))
 
   linreg_obj <- LinearRegression(
     formula=formula,
@@ -145,4 +157,7 @@ linreg = function(formula, data) {
   return(linreg_obj)
 }
 
+print_linreg = function(x) {
+  print(x)
+}
 

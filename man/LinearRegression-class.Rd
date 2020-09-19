@@ -4,7 +4,7 @@
 \name{LinearRegression-class}
 \alias{LinearRegression-class}
 \alias{LinearRegression}
-\title{LinearRegression Class}
+\title{LinearRegression class}
 \description{
 LinearRegression class containing information about relevant results from the linear regression method.
 }
@@ -33,6 +33,12 @@ LinearRegression class containing information about relevant results from the li
 \section{Methods}{
 
 \describe{
+\item{\code{coef()}}{Returns the regression coefficients as a named vector.}
+
+\item{\code{pred()}}{Returns the fitted values.}
+
 \item{\code{print()}}{Prints input parameters and regression coefficients.}
+
+\item{\code{resid()}}{Returns the residuals.}
 }}
 
