@@ -7,10 +7,12 @@ Author: Nicolas Taba, Tim Yuki Washio
 Maintainer: Tim Yuki Washio <timwa902@student.liu.se>, Nicolas Taba <nicta839@student.liu.se>
 Description: Computes linear regression using ordinary least squares, implementing object oriented programming in RC/S3.
 License: GPL-3
-LazyLoading: true
 RoxygenNote: 7.1.1
 Imports: ggplot2
-Depends: 
+Depends:
     R (>= 2.10)
-Suggests: 
-    testthat
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

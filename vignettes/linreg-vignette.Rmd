@@ -1,0 +1,87 @@
+---
+title: "lab4linreg-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{lab4linreg-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lab4linreg)
+```
+
+# Package Information
+
+lab4linreg package contains linreg class. The aim of this package is to compute linear regression models.
+
+## Class
+
+linreg class takes as inputs: a formula and a data.frame and returns an object of class linreg. On initialization the linreg object calculates regression coefficients, fitted values, residuals, degrees of freedom, residual variance, the variance of the regression coefficiients as well as the t-values for each of those coefficients.
+
+## Methods
+
+several methods are implement to return the calculated elements:
+
+### print( )
+the **print()** prints the object call and the calculated regression coefficients.
+
+### plot( )
+the **plot()** plots the residuals with respect to the fitted values and plots the standardized residuals with respect to the fitted values. 
+
+### resid( )
+the **resid()** returns the vector containing the residual values.
+
+### pred( )
+the **pred()** returns the prediction of the fitted values.
+
+### coef( )
+the **coef()** returns the coefficients of the linear regression.
+
+### summary( )
+the **summary()** prints a summary of the linear regression model containing the estimated coefficients, standard error, t-values, p-values and significance levels. It also prints the residual standard error as well as the degree of freedom.
+
+## Examples
+
+create an object of class linreg
+```
+data(iris)
+linreg_obj = linreg(Petal.Length~Species, iris)
+```
+
+call print method
+```
+linreg_obj$print()
+```
+
+call plot method
+```
+linreg_obj$plot()
+```
+
+call resid method
+```
+linreg_obj$resid()
+```
+
+call pred method
+```
+linreg_obj$pred()
+```
+
+call coef method
+```
+linreg_obj$coef()
+```
+
+call summary method
+```
+linreg_obj$summary()
+```

@@ -10,8 +10,9 @@
 #' @field variance_regression_coefficients A matrix
 #' @field t_values A vector
 #' @export
-LinearRegression = setRefClass("LinearRegression",
+linreg = setRefClass("linreg",
   fields = list(
+    dependent_var = "character",
     formula = "formula",
     data = "character",
     regression_coefficients = "matrix",
@@ -23,141 +24,137 @@ LinearRegression = setRefClass("LinearRegression",
     t_values = "matrix"
   ),
   methods = list(
+    initialize=function(formula, data) {
+      X <- model.matrix(formula, data) 
+      y <- as.matrix(data[all.vars(formula)[1]])
+      
+      .self$dependent_var = all.vars(formula)[1]
+      
+      #Assign formula and data
+      .self$formula <- formula
+      .self$data <- deparse(substitute(data))
+      
+      #Regression coefficients
+      .self$regression_coefficients <- solve(t(X) %*% X) %*% t(X) %*% y
+
+      #Fitted values
+      .self$fitted_values <- X %*% .self$regression_coefficients
+      
+      #Residuals
+      .self$residuals <- y - .self$fitted_values
+      
+      #Degrees of freedom
+      n <- nrow(X)
+      p <- ncol(X)
+      .self$degrees_freedom <- n-p
+      
+      #Residual variance
+      .self$residual_variance <- (t(.self$residuals)%*%.self$residuals)/.self$degrees_freedom
+      
+      #Variance of regression coefficients
+      .self$variance_regression_coefficients <- solve(t(X) %*% X) * .self$residual_variance[1]
+      .self$t_values <- .self$regression_coefficients/sqrt(diag(abs(.self$variance_regression_coefficients)))
+    },
     print = function(){
       "Prints input parameters and regression coefficients."
-      cat("Call:\nlinreg(formula = ", format(formula), ", data = ", data, ")\n", sep = "")
+      cat("Call:\nlinreg(formula = ", format(.self$formula), ", data = ", .self$data, ")\n\n", sep = "")
       
-      v_reg_coef.values = as.vector(regression_coefficients)
-      names(v_reg_coef.values) = rownames(regression_coefficients)
+      v_reg_coef.values = as.vector(.self$regression_coefficients)
+      names(v_reg_coef.values) = rownames(.self$regression_coefficients)
       cat("Coefficients:\n")
       print_linreg(v_reg_coef.values)
     },
     plot = function(){
+      "Plots the residuals ~ fitted values and scale-location."
       library(ggplot2)
-      standardized_residuals = sqrt(abs(residuals - median(residuals)))
+      standardized_residuals = .self$residuals/sd(.self$residuals)
+      
       p1 = 
         ggplot(
-          data.frame(residuals, fitted_values),
-          aes(x=fitted_values, y=residuals)
+          data.frame(.self$residuals, .self$fitted_values),
+          aes(x=.self$fitted_values, y=.self$residuals)
         ) + 
         geom_point() +
-        geom_smooth(method=lm, col="red", se=FALSE) +
-        xlab(paste("Fitted Values \n", "linreg(", format(formula), ")")) +
+        geom_smooth(method="lm", col="red", se=FALSE) +
+        xlab(paste("Fitted Values \n", "linreg(", format(.self$formula), ")")) +
         ylab("Residuals") +
         ggtitle("Residuals vs Fitted")
 
       print_linreg(p1)
       p2 = 
         ggplot(
-          data.frame(standardized_residuals, fitted_values),
-          aes(x=fitted_values, y=standardized_residuals)
+          data.frame(standardized_residuals, .self$fitted_values),
+          aes(x=.self$fitted_values, y=standardized_residuals)
         ) +
         geom_point() +
-        geom_smooth(method=lm, col="red", se=FALSE) +
-        xlab(paste("Fitted Values \n", format(formula))) +
+        geom_smooth(method="lm", col="red", se=FALSE) +
+        xlab(paste("Fitted Values \n", format(.self$formula))) +
         ylab(expression(sqrt("Standardized Residuals"))) +
         ggtitle("Scale-Location")
       print_linreg(p2)
     },
     resid = function(){
       "Returns the residuals."
-      return(residuals)
+      return(.self$residuals)
     },
     #predicted values method
     pred = function(){
       "Returns the fitted values."
-      return(fitted_values)
+      return(.self$fitted_values)
     },
     #regression coefficients method
     coef = function(){
       "Returns the regression coefficients as a named vector."
-      v_reg_coef.values = as.vector(regression_coefficients)
-      names(v_reg_coef.values) = rownames(regression_coefficients)
+      v_reg_coef.values = as.vector(.self$regression_coefficients)
+      names(v_reg_coef.values) = rownames(.self$regression_coefficients)
       return(v_reg_coef.values)
+    },
+    #summary method
+    summary = function(){
+      "Summarizes values of regression."
+      cat("Call:\nlinreg(formula = ", format(.self$formula), ", data = ", .self$data, ")\n\n", sep = "")
+      cat("Coefficients:\n")
+      
+      p_values <- 2*pt(-abs(.self$t_values), df=.self$degrees_freedom)
+      formatted_p_values <- format.pval(2*pt(-abs(.self$t_values), df=.self$degrees_freedom), digits=1)
+      std_error_coef <- sqrt(diag(abs(.self$variance_regression_coefficients)))
+
+      round_reg_coef = round(.self$regression_coefficients, 6)
+      round_std_error_coef = round(std_error_coef, 6)
+      round_t_values = round(.self$t_values, 4)
+      stars = c(0, length=length(p_values))
+      for (val in 1:length(p_values)) {
+        if (p_values[val] < 0.001) {
+          stars[val] = "***"
+        }
+        else if (p_values[val] < 0.01) {
+          stars[val] = "**"
+        }
+        else if (p_values[val] < 0.05) {
+          stars[val] = "*"
+        }
+        else if (p_values[val] < 0.1) {
+          stars[val] = "."
+        }
+        else {
+          stars[val] = " "
+        }
+      }
+      table = data.frame(round_reg_coef, round_std_error_coef, round_t_values, formatted_p_values, stars)
+      colnames(table) = c("Estimate", "Std. Error", "t value", "p value", " ")
+      print.data.frame(table)
+
+      cat("\nResidual standard error: ", as.character(sqrt(.self$residual_variance)), " on ", .self$degrees_freedom, " degrees of freedom", sep="")
     }
-    # #summary method
-    # summary <- function(){
-    #   cat("Call: \n")
-    #   cat(paste0("linreg(formula = ", as.character(.self$formula), ", data = ", as.character(.self$data),"\n"))
-    #   cat("Coefficients: \n")
-    #   # code a table here that is similar to summary(lm(Petal.Length~Species, data = iris))
-    #   # p_value <- 2*pt(-abs(.self$t_values))
-    #   #only coefficients (Beta), sqrt(variance_regression_coefficients), t value and p value
-    #   #need to round values otherwise we might return machine precision ~= 0
-    #   #not sure if this work
-    #   # table <- matrix(c(round(.self$regression_coefficients, 3)),
-    #   #                   round(.self$variance_regression_coefficients, 3),
-    #   #                   round(.self$t_value, 3),
-    #   #                   round(p_value, 3)),
-    #   #                   nrow = length(.self$regression_coefficients), ncol = 4)
-    #   # rownames(table) <- rownames(.self$regression_coefficients)
-    #   # colnames(table) <- c("Estimate", "Std. Error", "t value", "p value")
-    #   # write.table(table)
-    # 
-    #   cat(paste0("\n Residual standard error: ", as.character(sqrt(.self$residual_variance)), " on", .self$degrees_freedom, " degrees of freedom"))
-    # }
   )
 )
 
-#' @title Linear Regression
-#' 
-#' @description Implementation of a linear regression model to calculate the relationship
-#' between a dependent variable and N independent variables.
-#' @param formula formula
-#' @param data data.frame
-#' @return Instance of LinearRegression class
-#' @references \url{https://en.wikipedia.org/wiki/Linear_regression}
-#' @examples 
-#' linreg(formula = Petal.Length ~ Species, data = iris)
+#' @title print_linreg
+#' @description our own print function for use inside linreg class
+#' @param object_to_print object
+#' @return None
 #' @export
-linreg = function(formula, data) {
-  X <- model.matrix(formula, data) 
-  y <- as.matrix(data[all.vars(formula)[1]]) 
-  
-  #Regression coefficients
-  Beta <- solve(t(X) %*% X) %*% t(X) %*% y
-  
-  #Fitted values
-  fit_val <- X %*% Beta
-  
-  #Residuals
-  e <- y - fit_val
-  
-  #Degrees of freedom
-  n <- nrow(X)
-  p <- ncol(X)
-  df <- n-p
-  
-  #Residual variance
-  sigma2 <- (t(e)%*%e)/df
-  
-  #variance of regression coefficients
-  var_beta <- solve(t(X) %*% X) * sigma2[1]
-  
-  #t-values for each coefficient
-  # t <- Beta %*% (1/sqrt(abs(var_beta))) #wrong size of table, brute force with a for loop
-  # t <- rep(0, length(Beta))
-  # for (i in 1:length(Beta)){
-  #   t[i] <- Beta/sqrt(abs(var_beta[i,i]))
-  # }
-  
-  t <- var_beta/as.double(sqrt(sigma2))
-
-  linreg_obj <- LinearRegression(
-    formula=formula,
-    data=deparse(substitute(data)),
-    regression_coefficients=Beta,
-    fitted_values=fit_val,
-    residuals=e,
-    degrees_freedom=df,
-    residual_variance=sigma2,
-    variance_regression_coefficients=var_beta,
-    t_values=t
-  )
-  return(linreg_obj)
-}
-
-print_linreg = function(x) {
-  print(x)
+print_linreg = function(object_to_print) {
+  print(object_to_print)
 }
 
