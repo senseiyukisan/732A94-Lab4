@@ -2,4 +2,3 @@
 
 export(linreg)
 export(print_linreg)
-import(methods)

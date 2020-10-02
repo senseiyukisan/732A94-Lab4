@@ -11,7 +11,6 @@
 #' @field t_values A vector
 #' 
 #' @return class
-#' @import methods
 #' @export linreg
 linreg = setRefClass("linreg",
   fields = list(
