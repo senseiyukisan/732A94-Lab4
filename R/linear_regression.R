@@ -9,7 +9,10 @@
 #' @field residual_variance A matrix
 #' @field variance_regression_coefficients A matrix
 #' @field t_values A vector
-#' @export
+#' 
+#' @return class
+#' @import methods
+#' @export linreg
 linreg = setRefClass("linreg",
   fields = list(
     dependent_var = "character",

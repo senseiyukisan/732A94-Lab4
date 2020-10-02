@@ -5,6 +5,9 @@
 \alias{linreg-class}
 \alias{linreg}
 \title{LinearRegression class}
+\value{
+class
+}
 \description{
 LinearRegression class containing information about relevant results from the linear regression method.
 }
